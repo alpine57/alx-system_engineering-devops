@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Display a list of currently running processes with hierarchy
+
+# Fetch process information using the ps command
+# Arguments:
+# -e: Select all processes
+# -o: User-oriented format
+# --forest: Display process hierarchy
+ps aux --forest
+
