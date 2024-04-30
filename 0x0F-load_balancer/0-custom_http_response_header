@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Script that configures Nginx server with custom header
+apt-get -y update
+apt-get -y install nginx
+
+echo "Hello World!" > /var/www/html/index.nginx-debian.html
+echo "Ceci n'est pas une page" > /usr/share/nginx/html/custom_404.html
