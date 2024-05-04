@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+#Configure your domain zone so that the subdomain www points to your load-balancer IP
+get_domain_info() {
+    domain="$1"
+    subdomain="$2"
+    response=$(dig +short A "$subdomain.$domain" | head -n 1)
+    if [ -n "$response" ]; then
+        echo "The subdomain $subdomain is a A record and points to $response"
+    fi
+}
+
+# Main function
+main() {
+    domain="$1"
+    subdomain="$2"
+
+    if [ -n "$subdomain" ]; then
+        get_domain_info "$domain" "$subdomain"
+    else
+        subdomains=("www" "lb-01" "web-01" "web-02")
+        for sub in "${subdomains[@]}"; do
+            get_domain_info "$domain" "$sub"
+        done
+    fi
+}
+
+# Check if the required arguments are provided
+if [ $# -lt 1 ]; then
+    echo "Usage: $0 <domain> [<subdomain>]"
+    exit 1
+fi
+
+# Call the main function with provided arguments
+main "$@"
