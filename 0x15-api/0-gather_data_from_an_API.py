@@ -1,47 +1,41 @@
-#!/usr/bin/python3
-"""Gather employee data from the API and display their TODO list progress"""
+#!/usr/bin/env python3
+"""get employee data from API"""
 
+import re
 import requests
 import sys
 
-# Define the base URL for the REST API
 REST_API = "https://jsonplaceholder.typicode.com"
 
-def get_employee_todo_progress(employee_id):
-    """Fetches and displays the TODO list progress for a given employee ID."""
-    try:
-        
-        user_response = requests.get(f'{REST_API}/users/{employee_id}')
-        user_response.raise_for_status()
-        user_data = user_response.json()
-        emp_name = user_data.get('name')
+def get_employee_data(employee_id):
+    """Fetch employee data and tasks from the API"""
+    user_response = requests.get(f'{REST_API}/users/{employee_id}')
+    tasks_response = requests.get(f'{REST_API}/todos')
+    
+    if user_response.status_code != 200 or tasks_response.status_code != 200:
+        print("Error fetching data from API")
+        return
 
-        todos_response = requests.get(f'{REST_API}/todos?userId={employee_id}')
-        todos_response.raise_for_status()
-        todos = todos_response.json()
-
-        
-        completed_tasks = [task for task in todos if task.get('completed')]
-
-        print(f'Employee {emp_name} is done with tasks({len(completed_tasks)}/{len(todos)}):')
-
-        for task in completed_tasks:
-            print(f'\t {task.get("title")}')
-
-    except requests.RequestException as e:
-        print(f"Error fetching data: {e}")
-    except ValueError:
-        print("Invalid JSON data received")
+    user_data = user_response.json()
+    tasks_data = tasks_response.json()
+    
+    return user_data, tasks_data
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Usage: python3 script.py <employee_id>")
-        sys.exit(1)
-    
-    if re.fullmatch(r'\d+', sys.argv[1]):
+    if len(sys.argv) > 1 and re.fullmatch(r'\d+', sys.argv[1]):
         employee_id = int(sys.argv[1])
-        get_employee_todo_progress(employee_id)
+        user_data, tasks_data = get_employee_data(employee_id)
+
+        if not user_data:
+            sys.exit(1)
+
+        employee_name = user_data.get('name')
+        user_tasks = [task for task in tasks_data if task.get('userId') == employee_id]
+        completed_tasks = [task for task in user_tasks if task.get('completed')]
+
+        print(f'Employee {employee_name} is done with tasks({len(completed_tasks)}/{len(user_tasks)}):')
+        for task in completed_tasks:
+            print(f'\t {task.get("title")}')
     else:
-        print("Employee ID must be a positive integer")
-        sys.exit(1)
+        print("Please provide a valid employee ID as an argument.")
 
